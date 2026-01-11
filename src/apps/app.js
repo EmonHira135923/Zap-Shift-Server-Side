@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import projectStart from "../routes/projectStart.routes.js";
+import percel from "../routes/percel.routes.js";
 
 const app = express();
 
@@ -9,6 +10,11 @@ app.use(cors());
 app.use(express.json());
 
 // Routes
-app.use("api", projectStart);
+
+// Project start
+app.use("/api", projectStart);
+
+// Percel
+app.use("/api", percel);
 
 export default app;

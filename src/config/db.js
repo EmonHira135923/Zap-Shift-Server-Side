@@ -15,11 +15,13 @@ const client = new MongoClient(uri, {
 });
 
 let db;
+let percelCollection;
 
 export const connectDB = async () => {
   try {
     await client.connect();
     db = client.db("Zap-Shift-Management-System");
+    percelCollection = db.collection("percels");
     console.log("MongoDB Connection Successfully");
   } catch (err) {
     console.error("DB Connection Failed", err.message);
@@ -28,3 +30,4 @@ export const connectDB = async () => {
 };
 
 export const getDB = () => db;
+export const getPercel = () => percelCollection;

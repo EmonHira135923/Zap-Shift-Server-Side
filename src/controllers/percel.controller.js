@@ -25,14 +25,15 @@ export const getAllPercelController = async (req, res) => {
 export const getAllPercelByQueryController = async (req, res) => {
   try {
     const percelCollection = getPercel();
-    const query = req.body;
+    const query = {};
     const { email } = req.query;
     // console.log("email", email, "Query", req.query);
     if (email) {
-      query.email = email;
+      query.senderEmail = email;
     }
-    const cursor = percelCollection.find(query);
+    const cursor = percelCollection.find(query).sort({ createdAt: -1 });
     const result = await cursor.toArray();
+    // console.log("result", result);
     res.status(200).send({
       message: "Your Percel Here!!!",
       success: true,
@@ -67,12 +68,59 @@ export const createAllPercelController = async (req, res) => {
   }
 };
 
-// update Percel
+// Percel using id percel
+export const findOnePercelController = async (req, res) => {
+  try {
+    const percelCollection = getPercel();
+    const id = req.params.id;
+    const query = { _id: new ObjectId(id) };
+    const result = await percelCollection.findOne(query);
+    console.log(
+      "Find percel",
+      result,
+      "collection",
+      percelCollection,
+      "id",
+      id,
+      "q",
+      query
+    );
+    res.status(200).send({
+      message: "Get Your Percel",
+      success: true,
+      result,
+    });
+  } catch (err) {
+    res.status(500).send({
+      message: "Percel Not Deleted",
+      success: false,
+      err: err.message,
+    });
+  }
+};
+
 export const updateAllPercelController = async (req, res) => {
   const percelCollection = getPercel();
 };
 
 // delete Percel
 export const deleteAllPercelController = async (req, res) => {
-  const percelCollection = getPercel();
+  try {
+    const percelCollection = getPercel();
+    const id = req.params.id;
+    const query = { _id: new ObjectId(id) };
+    const result = await percelCollection.deleteOne(query);
+    // console.log("result", result);
+    res.status(200).send({
+      message: "Percel Successfully Deleted",
+      success: true,
+      result,
+    });
+  } catch (err) {
+    res.status(500).send({
+      message: "Percel Not Deleted",
+      success: false,
+      err: err.message,
+    });
+  }
 };

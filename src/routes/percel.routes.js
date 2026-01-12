@@ -2,6 +2,7 @@ import express from "express";
 import {
   createAllPercelController,
   deleteAllPercelController,
+  findOnePercelController,
   getAllPercelByQueryController,
   getAllPercelController,
   updateAllPercelController,
@@ -10,6 +11,7 @@ import {
 const router = express.Router();
 
 router.get("/allpercels", getAllPercelController);
+router.get("/payments/:id", findOnePercelController);
 router.get("/mypercel", getAllPercelByQueryController);
 router.post("/create-percel", createAllPercelController);
 router.put("/update-percel/:id", updateAllPercelController);

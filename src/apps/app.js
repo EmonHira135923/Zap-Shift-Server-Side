@@ -7,7 +7,7 @@ import payment from "../routes/payment.routes.js";
 
 const app = express();
 const stripe = Stripe(process.env.PAYMENT_KEY);
-console.log(stripe);
+// console.log(stripe);
 
 // Middlewares
 app.use(cors());

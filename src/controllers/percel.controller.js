@@ -75,16 +75,16 @@ export const findOnePercelController = async (req, res) => {
     const id = req.params.id;
     const query = { _id: new ObjectId(id) };
     const result = await percelCollection.findOne(query);
-    console.log(
-      "Find percel",
-      result,
-      "collection",
-      percelCollection,
-      "id",
-      id,
-      "q",
-      query
-    );
+    // console.log(
+    //   "Find percel",
+    //   result,
+    //   "collection",
+    //   percelCollection,
+    //   "id",
+    //   id,
+    //   "q",
+    //   query
+    // );
     res.status(200).send({
       message: "Get Your Percel",
       success: true,

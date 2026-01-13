@@ -1,6 +1,7 @@
 import { ObjectId } from "mongodb";
 import Stripe from "stripe";
-import { getPercel } from "../config/db.js";
+import { getPayment, getPercel } from "../config/db.js";
+import { generateTrackingId } from "../utils/tracking.js";
 
 const stripe = Stripe(`${process.env.PAYMENT_KEY}`);
 
@@ -26,6 +27,18 @@ export const paymentController = async (req, res) => {
       customer_email: paymentInfo.senderEmail,
       metadata: {
         id: paymentInfo.id,
+        parcelName: paymentInfo.parcelName,
+        senderRegion: paymentInfo.senderRegion,
+        senderDistrict: paymentInfo.senderDistrict,
+        senderName: paymentInfo.senderName,
+        senderAddress: paymentInfo.senderAddress,
+        senderPhone: paymentInfo.senderPhone,
+        receiverRegion: paymentInfo.receiverRegion,
+        receiverDistrict: paymentInfo.receiverDistrict,
+        receiverName: paymentInfo.receiverName,
+        receiverEmail: paymentInfo.receiverEmail,
+        receiverAddress: paymentInfo.receiverAddress,
+        receiverContact: paymentInfo.receiverContact,
       },
       success_url: `${process.env.SITE_DOMAIN}/dashboard/payments/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.SITE_DOMAIN}/dashboard/payments/cancel`,
@@ -49,31 +62,57 @@ export const paymentController = async (req, res) => {
 export const verifyPaymentController = async (req, res) => {
   try {
     const percelCollection = getPercel();
+    const paymentCollection = getPayment();
     const session_id = req.query.session_id;
     const session = await stripe.checkout.sessions.retrieve(session_id);
-    // console.log("session", session);
-    const { payment_status, metadata, customer_email, created } = session;
+    const {
+      payment_status,
+      parcelName,
+      currency,
+      metadata,
+      customer_email,
+      created,
+      amount_total,
+      payment_intent,
+    } = session;
+    console.log("session", session);
     const id = metadata.id;
+    const trackingId = generateTrackingId();
     if (payment_status) {
       const query = { _id: new ObjectId(id) };
       const update = {
         $set: {
           paymentStatus: "paid",
-          customer_email,
-          created,
+          trackingId: trackingId,
         },
       };
+      const payment = {
+        totalCost: amount_total / 100,
+        currency: currency,
+        customer_email: customer_email,
+        id: id,
+        parcelName: parcelName,
+        paymentStatus: payment_status,
+        paidAt: new Date(),
+        transaction_id: payment_intent,
+      };
       const result = await percelCollection.updateOne(query, update);
-      res.status(200).send({
-        message: "Your session id is here",
-        success: true,
-        result,
-      });
+      if (payment_status) {
+        const payments = await paymentCollection.insertOne(payment);
+        res.status(200).send({
+          message: "Your session id is here",
+          success: true,
+          result,
+          payments,
+          trackingId: trackingId,
+          transaction_id: payment_intent,
+        });
+      }
     }
   } catch (err) {
     res.status(500).send({
       message: "Your session id is not found",
-      success: true,
+      success: false,
       err: err.message,
     });
   }

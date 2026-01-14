@@ -43,7 +43,7 @@ export const paymentController = async (req, res) => {
       success_url: `${process.env.SITE_DOMAIN}/dashboard/payments/success?session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${process.env.SITE_DOMAIN}/dashboard/payments/cancel`,
     });
-    console.log("session", session.unit_amount, session);
+    // console.log("session", session.unit_amount, session);
     return res.status(200).send({
       message: "Payment Successfully Done",
       success: true,
@@ -64,55 +64,93 @@ export const verifyPaymentController = async (req, res) => {
     const percelCollection = getPercel();
     const paymentCollection = getPayment();
     const session_id = req.query.session_id;
+
     const session = await stripe.checkout.sessions.retrieve(session_id);
+
     const {
       payment_status,
-      parcelName,
       currency,
       metadata,
       customer_email,
-      created,
       amount_total,
       payment_intent,
     } = session;
-    console.log("session", session);
+
     const id = metadata.id;
     const trackingId = generateTrackingId();
-    if (payment_status) {
-      const query = { _id: new ObjectId(id) };
-      const update = {
-        $set: {
-          paymentStatus: "paid",
-          trackingId: trackingId,
-        },
-      };
-      const payment = {
-        totalCost: amount_total / 100,
-        currency: currency,
-        customer_email: customer_email,
-        id: id,
-        parcelName: parcelName,
-        paymentStatus: payment_status,
-        paidAt: new Date(),
-        transaction_id: payment_intent,
-      };
-      const result = await percelCollection.updateOne(query, update);
-      if (payment_status) {
-        const payments = await paymentCollection.insertOne(payment);
-        res.status(200).send({
-          message: "Your session id is here",
-          success: true,
-          result,
-          payments,
-          trackingId: trackingId,
-          transaction_id: payment_intent,
-        });
-      }
+
+    // ✅ only paid accepted
+    if (payment_status !== "paid") {
+      return res.status(400).send({
+        success: false,
+        message: "Payment not completed",
+      });
     }
+
+    // update parcel
+    const query = { _id: new ObjectId(id) };
+    await percelCollection.updateOne(query, {
+      $set: { paymentStatus: "paid", trackingId },
+    });
+
+    // prepare payment doc
+    const payment = {
+      totalCost: amount_total / 100,
+      currency,
+      customer_email,
+      id,
+      parcelName: metadata.parcelName,
+      paymentStatus: payment_status,
+      paidAt: new Date(),
+      transaction_id: payment_intent,
+    };
+
+    // prevent duplicate insert
+    const existing = await paymentCollection.findOne({
+      transaction_id: payment_intent,
+    });
+
+    if (!existing) {
+      await paymentCollection.insertOne(payment);
+    }
+
+    return res.status(200).send({
+      success: true,
+      message: "Payment verified successfully",
+      trackingId,
+      transaction_id: payment_intent,
+    });
   } catch (err) {
-    res.status(500).send({
-      message: "Your session id is not found",
+    return res.status(500).send({
       success: false,
+      message: "Session not found or invalid",
+      err: err.message,
+    });
+  }
+};
+
+// payments collection controller
+export const getPaymentsController = async (req, res) => {
+  try {
+    const paymentCollection = getPayment();
+    const email = req.query.email;
+    const query = {};
+    if (email) {
+      query.customer_email = email;
+    }
+
+    // console.log("authoraizatiion", req.headers);
+
+    const result = await paymentCollection.find(query).toArray();
+    return res.status(200).send({
+      success: true,
+      message: "Payments fetched successfully",
+      result,
+    });
+  } catch (err) {
+    return res.status(500).send({
+      success: false,
+      message: "Could not fetch payments",
       err: err.message,
     });
   }

@@ -137,6 +137,13 @@ export const getPaymentsController = async (req, res) => {
     const query = {};
     if (email) {
       query.customer_email = email;
+      // console.log("email", req.user.email);
+      if (email !== req.user?.email) {
+        return res.status(403).send({
+          success: false,
+          message: "Forbidden access",
+        });
+      }
     }
 
     // console.log("authoraizatiion", req.headers);

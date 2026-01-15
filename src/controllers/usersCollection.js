@@ -54,7 +54,9 @@ export const updateUserController = async (req, res) => {
     const updateData = req.body;
     const query = { _id: new ObjectId(id) };
     const updateDoc = {
-      $set: updateData.role,
+      $set: {
+        role: updateData.role,
+      },
     };
     const result = await usersCollection.updateOne(query, updateDoc);
     return res.status(200).send({

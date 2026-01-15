@@ -18,6 +18,7 @@ let db;
 let percelCollection;
 let paymentCollection;
 let usersCollection;
+let ridersCollection;
 
 export const connectDB = async () => {
   try {
@@ -26,6 +27,7 @@ export const connectDB = async () => {
     percelCollection = db.collection("percels");
     paymentCollection = db.collection("payments");
     usersCollection = db.collection("users");
+    ridersCollection = db.collection("riders");
     console.log("MongoDB Connection Successfully");
   } catch (err) {
     console.error("DB Connection Failed", err.message);
@@ -37,3 +39,4 @@ export const getDB = () => db;
 export const getPercel = () => percelCollection;
 export const getPayment = () => paymentCollection;
 export const getUsers = () => usersCollection;
+export const getRiders = () => ridersCollection;

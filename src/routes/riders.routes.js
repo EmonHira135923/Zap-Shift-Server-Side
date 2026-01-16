@@ -6,6 +6,7 @@ import {
   updateRiderStatusController,
 } from "../controllers/riders.controller.js";
 import { verifyFBTokenController } from "../middlewares/verifyFBToken.middlewares.js";
+import { verifyAdminMiddleware } from "../middlewares/verifyAdmin.middlewares.js";
 
 const router = express.Router();
 
@@ -13,8 +14,9 @@ const router = express.Router();
 router.post("/create-rider", createRidersController);
 router.get("/riders", getAllRidersController);
 router.patch(
-  "/update-rider/:id",
+  "/update-rider/:id/role",
   verifyFBTokenController,
+  verifyAdminMiddleware,
   updateRiderStatusController
 );
 router.delete(

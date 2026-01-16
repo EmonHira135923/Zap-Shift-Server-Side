@@ -46,6 +46,49 @@ export const getUsersController = async (req, res) => {
   }
 };
 
+// get single user controller
+export const getSingleUserController = async (req, res) => {
+  try {
+    const usersCollection = getUsers();
+    const id = req.params.id;
+    const query = { _id: new ObjectId(id) };
+    const result = await usersCollection.findOne(query);
+    return res.status(200).send({
+      success: true,
+      message: "User fetched successfully",
+      result,
+    });
+  } catch (err) {
+    return res.status(500).send({
+      success: false,
+      message: "Could not fetch user",
+      err: err.message,
+    });
+  }
+};
+
+// get user by role controller
+export const getUserByRoleController = async (req, res) => {
+  try {
+    const usersCollection = getUsers();
+    const email = req.params.email;
+    console.log("users", email);
+    const query = { email: email };
+    const result = await usersCollection.findOne(query);
+    return res.status(200).send({
+      success: true,
+      message: "User fetched successfully by role",
+      result: { role: result?.role || "user" },
+    });
+  } catch (err) {
+    return res.status(500).send({
+      success: false,
+      message: "Could not fetch user by role",
+      err: err.message,
+    });
+  }
+};
+
 // update controller
 export const updateUserController = async (req, res) => {
   try {

@@ -26,10 +26,13 @@ export const getAllPercelByQueryController = async (req, res) => {
   try {
     const percelCollection = getPercel();
     const query = {};
-    const { email } = req.query;
+    const { email, deliveryStatus } = req.query;
     // console.log("email", email, "Query", req.query);
     if (email) {
       query.senderEmail = email;
+    }
+    if (deliveryStatus) {
+      query.deliveryStatus = deliveryStatus;
     }
     const cursor = percelCollection.find(query).sort({ createdAt: -1 });
     const result = await cursor.toArray();

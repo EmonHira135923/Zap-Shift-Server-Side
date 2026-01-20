@@ -4,7 +4,7 @@ export const verifyAdminMiddleware = async (req, res, next) => {
   try {
     const userCollection = getUsers();
     const email = req.user?.email;
-    console.log("users admin", email);
+    // console.log("users admin", email);
     const query = { email: email };
     const result = await userCollection.findOne(query);
     if (result && result.role === "admin") {

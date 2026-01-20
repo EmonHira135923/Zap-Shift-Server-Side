@@ -90,7 +90,11 @@ export const verifyPaymentController = async (req, res) => {
     // update parcel
     const query = { _id: new ObjectId(id) };
     await percelCollection.updateOne(query, {
-      $set: { paymentStatus: "paid", trackingId },
+      $set: {
+        paymentStatus: "paid",
+        deliveryStatus: "pending-pickup",
+        trackingId,
+      },
     });
 
     // prepare payment doc

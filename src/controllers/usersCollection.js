@@ -30,18 +30,37 @@ export const usersController = async (req, res) => {
 export const getUsersController = async (req, res) => {
   try {
     const usersCollection = getUsers();
-    const users = usersCollection.find().sort({ createdAt: -1 });
-    const result = await users.toArray();
-    return res.status(200).send({
+    const searchTerm = req.query.searchTerm;
+    const roleFilter = req.query.roleFilter;
+
+    let query = {};
+
+    if (searchTerm) {
+      query.$or = [
+        { displayName: { $regex: searchTerm, $options: "i" } },
+        { email: { $regex: searchTerm, $options: "i" } },
+      ];
+    }
+
+    if (roleFilter && roleFilter !== "all") {
+      query.role = roleFilter;
+    }
+
+    const result = await usersCollection
+      .find(query)
+      .sort({ createdAt: -1 })
+      .toArray();
+
+    res.status(200).send({
       success: true,
       message: "Users fetched successfully",
       result,
     });
   } catch (err) {
-    return res.status(500).send({
+    res.status(500).send({
       success: false,
-      err: err.message,
       message: "Could not fetch users",
+      err: err.message,
     });
   }
 };
